@@ -5,3 +5,4 @@ bin
 *.ide
 *.ide-shm
 *.ide-wal
+/PlateSolveWrapper/PlateSolveWrapper.csproj.user

@@ -76,8 +76,6 @@ namespace PlateSolveWrapper
 
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                _telescope.SlewToCoordinates(19.99018, 22.73 + 1);
-
                 string fileName = dialog.FileName;
                 _settings.LastImagePath = Path.GetFullPath(fileName);
 
