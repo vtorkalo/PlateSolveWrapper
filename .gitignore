@@ -1,0 +1,7 @@
+obj
+bin
+*.suo
+*.lock
+*.ide
+*.ide-shm
+*.ide-wal
