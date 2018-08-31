@@ -1,5 +1,7 @@
 ﻿using ASCOM.DriverAccess;
+using ASCOM.Utilities;
 using System;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
 
@@ -9,17 +11,19 @@ namespace PlateSolveWrapper
     {
         private PlateSolver _plateSolver;
         private Telescope _telescope;
+        private Camera _camera;
         private SettingsProvider _settingsProvider;
         private string settingsFileName = "settings.xml";
         private Settings _settings;
         private System.Windows.Forms.Timer _timer;
+        private Util _util = new Util();
 
         public fmMain()
         {
             InitializeComponent();
             _settingsProvider = new SettingsProvider(settingsFileName);
             _settings = _settingsProvider.ReadSettings();
-            _timer = new Timer();
+            _timer = new System.Windows.Forms.Timer();
             _timer.Interval = 2000;
             _timer.Tick += _timer_Tick;
             _timer.Start();
@@ -47,6 +51,7 @@ namespace PlateSolveWrapper
             numFieldHeight.Value = (decimal)_settings.FieldHeight;
             tbPlateSolverPath.Text = _settings.SolverPath;
             numSearchTiles.Value = _settings.SearchTiles;
+            numExposure.Value = _settings.Exposure;
         }
 
         private void btnConnectMount_Click(object sender, EventArgs e)
@@ -55,48 +60,29 @@ namespace PlateSolveWrapper
             UpdateUiState();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        
+
+        private void SolveAndSync(string fileName)
         {
-            try
+            _settings.LastImagePath = Path.GetFullPath(fileName);
+
+            var coords = _plateSolver.PlateSolve(fileName,
+                                                _telescope.RightAscension,
+                                                _telescope.Declination,
+                                                _settings.FieldWidth,
+                                                _settings.FieldHeight,
+                                                _settings.SearchTiles,
+                                                _settings.SolverPath);
+            if (coords != null)
             {
-                SolveAndSync();
+                _telescope.SyncToCoordinates(coords.Ra, coords.Dec);
+                tbSolvedCoordinates.Text = string.Format("{0}, Angle: {1:0.##}", GetCoordinatesStr(coords.Ra, coords.Dec), coords.CameraAngle);
+                lblSolvedFileName.Text = Path.GetFileName(fileName);
+                MessageBox.Show("Sync successful");
             }
-            catch(Exception ex)
+            else
             {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void SolveAndSync()
-        {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Title = "Open Image";
-            dialog.InitialDirectory = _settings.LastImagePath;
-            dialog.Filter = "Images|*.jpg;*.jpeg;*.tiff;*.tif;*.fit;*.fits;";
-
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                string fileName = dialog.FileName;
-                _settings.LastImagePath = Path.GetFullPath(fileName);
-
-                var coords = _plateSolver.PlateSolve(fileName,
-                                                    _telescope.RightAscension,
-                                                    _telescope.Declination,
-                                                    _settings.FieldWidth,
-                                                    _settings.FieldHeight,
-                                                    _settings.SearchTiles,
-                                                    _settings.SolverPath);
-                if (coords != null)
-                {
-                    _telescope.SyncToCoordinates(coords.Ra, coords.Dec);
-                    tbSolvedCoordinates.Text = string.Format("{0}, Angle: {1:0.##}", GetCoordinatesStr(coords.Ra, coords.Dec), coords.CameraAngle);
-                    lblSolvedFileName.Text = Path.GetFileName(fileName);
-                    MessageBox.Show("Sync successful");
-                }
-                else
-                {
-                    MessageBox.Show("Sync failed");
-                }
+                MessageBox.Show("Sync failed");
             }
         }
 
@@ -150,7 +136,7 @@ namespace PlateSolveWrapper
 
         private void numSearchTiles_ValueChanged(object sender, EventArgs e)
         {
-            _settings.SearchTiles =(int) numSearchTiles.Value;
+            _settings.SearchTiles = (int)numSearchTiles.Value;
         }
 
         private void btnDisconnect_Click(object sender, EventArgs e)
@@ -173,21 +159,34 @@ namespace PlateSolveWrapper
             return connected;
         }
 
+        private bool IsCameraConnected()
+        {
+            bool connected = false;
+            try
+            {
+                connected = _camera != null && _camera.Connected;
+            }
+            catch (Exception)
+            {
+
+            }
+            return connected;
+        }
+
         private void UpdateUiState()
         {
             bool scopeConnected = IsScopeConnected();
-            btnConnectMount.Enabled =  !scopeConnected;
+            btnConnectMount.Enabled = !scopeConnected;
             btnDisconnect.Enabled = scopeConnected;
-            btnSolveAndSync.Enabled = scopeConnected;
+            btnOpenSolveAndSync.Enabled = scopeConnected;
+            lblScopeName.Text = scopeConnected ? _telescope.Name : "Not connected";
 
-            if (scopeConnected)
-            {
-                lblScopeName.Text = _telescope.Name;
-            }
-            else
-            {
-                lblScopeName.Text = "Not connected";
-            }
+
+            bool cameraConnected = IsCameraConnected();
+            btnConnectCamera.Enabled = !cameraConnected;
+            btnDisconnectCamera.Enabled = cameraConnected;
+            lblCameraName.Text = cameraConnected ? _camera.Name : "Not connected";
+            btnShotSolveSync.Enabled = scopeConnected && cameraConnected;
         }
 
         private string GetCoordinatesStr(double ra, double dec)
@@ -196,7 +195,85 @@ namespace PlateSolveWrapper
             var decAngle = GeoAngle.FromDouble(dec);
             string decSign = decAngle.IsNegative ? "" : "+";
             string result = string.Format("RA: {0}, DEC: {1}{2}", raAngle.ToString(), decSign, decAngle.ToString());
+
             return result;
+        }
+
+        private void btnConnectCamera_Click(object sender, EventArgs e)
+        {
+            ConnectCamera();
+            UpdateUiState();
+        }
+
+        private void btnDisconnectCamera_Click(object sender, EventArgs e)
+        {
+            DisconnectCamera();
+            UpdateUiState();
+        }
+
+        private void ConnectCamera()
+        {
+            string progID = Camera.Choose(_settings.LastCameraId);
+            if (!string.IsNullOrEmpty(progID))
+            {
+                _camera = new Camera(progID);
+                _camera.Connected = true;
+                _settings.LastCameraId = progID;
+            }
+        }
+
+        private void DisconnectCamera()
+        {
+            _camera.Connected = false;
+            _camera.Dispose();
+        }
+
+        private void btnOpenSolveSync_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                OpenFileDialog dialog = new OpenFileDialog();
+                dialog.Title = "Open Image";
+                dialog.InitialDirectory = _settings.LastImagePath;
+                dialog.Filter = "Images|*.jpg;*.jpeg;*.tiff;*.tif;*.fit;*.fits;";
+
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    SolveAndSync(dialog.FileName);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnShotSolveSync_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string fileName = Path.Combine(
+                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                    "temp.tif");
+                _camera.StartExposure(_settings.Exposure, true);
+                while (!_camera.ImageReady)
+                {
+                    _util.WaitForMilliseconds(300);
+                }
+                var bmp = ImageHelper.GetBitmapMonochrome((Array)_camera.ImageArray );
+                ImageHelper.SaveBmp(bmp, fileName);
+
+                SolveAndSync(fileName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void numExposure_ValueChanged(object sender, EventArgs e)
+        {
+            _settings.Exposure = (int)numExposure.Value;
         }
     }
 }

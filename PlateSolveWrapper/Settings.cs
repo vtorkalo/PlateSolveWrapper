@@ -10,6 +10,7 @@ namespace PlateSolveWrapper
             FieldWidth = 76;
             FieldHeight = 50;
             SearchTiles = 300;
+            Exposure = 10;
         }
 
         public double FieldWidth { get; set; }
@@ -18,5 +19,7 @@ namespace PlateSolveWrapper
         public int SearchTiles { get; set; }
         public string LastImagePath { get; set; }
         public string LastTelescopeId { get; set; }
+        public string LastCameraId { get; set; }
+        public int Exposure { get; set; }
     }
 }
