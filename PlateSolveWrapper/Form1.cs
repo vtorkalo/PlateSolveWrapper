@@ -265,7 +265,7 @@ namespace PlateSolveWrapper
                 string fileName = Path.Combine(
                     System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
                     "temp.jpg");
-                _camera.StartExposure(0.02, true);
+                _camera.StartExposure(_settings.Exposure, true);
                 while (!_camera.ImageReady)
                 {
                     _util.WaitForMilliseconds(300);
