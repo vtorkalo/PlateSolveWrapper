@@ -47,20 +47,34 @@ namespace PlateSolveWrapper
 
         private void UnitSettingsUI()
         {
-            numFieldWidth.Value = (decimal)_settings.FieldWidth;
-            numFieldHeight.Value = (decimal)_settings.FieldHeight;
+            numFieldWidth.Value = _settings.FieldWidth;
+            numFieldHeight.Value = _settings.FieldHeight;
             tbPlateSolverPath.Text = _settings.SolverPath;
             numSearchTiles.Value = _settings.SearchTiles;
             numExposure.Value = _settings.Exposure;
         }
 
-        private void btnConnectMount_Click(object sender, EventArgs e)
+        private void ReadSettingsFromUi()
         {
-            ConnectTelescope();
-            UpdateUiState();
+            _settings.FieldWidth = (int)numFieldWidth.Value;
+            _settings.FieldHeight =(int) numFieldHeight.Value;
+            _settings.SolverPath = tbPlateSolverPath.Text;
+            _settings.SearchTiles = (int)numSearchTiles.Value;
+            _settings.Exposure = (int)numExposure.Value;
         }
 
-        
+        private void btnConnectMount_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ConnectTelescope();
+                UpdateUiState();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to connect telescope");
+            }
+        }
 
         private void SolveAndSync(string fileName)
         {
@@ -108,18 +122,10 @@ namespace PlateSolveWrapper
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
+            ReadSettingsFromUi();
             _settingsProvider.SaveSettings(_settings);
         }
 
-        private void numFieldWidth_ValueChanged(object sender, EventArgs e)
-        {
-            _settings.FieldWidth = (double)numFieldWidth.Value;
-        }
-
-        private void numFieldHeight_ValueChanged(object sender, EventArgs e)
-        {
-            _settings.FieldHeight = (double)numFieldHeight.Value;
-        }
 
         private void btnBrowseSolver_Click(object sender, EventArgs e)
         {
@@ -132,11 +138,6 @@ namespace PlateSolveWrapper
                 _settings.SolverPath = theDialog.FileName;
             }
             tbPlateSolverPath.Text = _settings.SolverPath;
-        }
-
-        private void numSearchTiles_ValueChanged(object sender, EventArgs e)
-        {
-            _settings.SearchTiles = (int)numSearchTiles.Value;
         }
 
         private void btnDisconnect_Click(object sender, EventArgs e)
@@ -201,8 +202,15 @@ namespace PlateSolveWrapper
 
         private void btnConnectCamera_Click(object sender, EventArgs e)
         {
-            ConnectCamera();
-            UpdateUiState();
+            try
+            {
+                ConnectCamera();
+                UpdateUiState();
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show("Failed to connect camera");
+            }
         }
 
         private void btnDisconnectCamera_Click(object sender, EventArgs e)
@@ -232,6 +240,7 @@ namespace PlateSolveWrapper
         {
             try
             {
+                ReadSettingsFromUi();
                 OpenFileDialog dialog = new OpenFileDialog();
                 dialog.Title = "Open Image";
                 dialog.InitialDirectory = _settings.LastImagePath;
@@ -252,17 +261,18 @@ namespace PlateSolveWrapper
         {
             try
             {
+                ReadSettingsFromUi();
                 string fileName = Path.Combine(
                     System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
-                    "temp.tif");
-                _camera.StartExposure(_settings.Exposure, true);
+                    "temp.jpg");
+                _camera.StartExposure(0.02, true);
                 while (!_camera.ImageReady)
                 {
                     _util.WaitForMilliseconds(300);
                 }
-                var bmp = ImageHelper.GetBitmapMonochrome((Array)_camera.ImageArray );
-                ImageHelper.SaveBmp(bmp, fileName);
-
+                var array = (Array)_camera.ImageArray;
+                var bmp = ImageHelper.GetBitmapColor((Array)_camera.ImageArray);
+                bmp.Save(fileName, ImageFormat.Jpeg);
                 SolveAndSync(fileName);
             }
             catch (Exception ex)
@@ -271,9 +281,5 @@ namespace PlateSolveWrapper
             }
         }
 
-        private void numExposure_ValueChanged(object sender, EventArgs e)
-        {
-            _settings.Exposure = (int)numExposure.Value;
-        }
     }
 }

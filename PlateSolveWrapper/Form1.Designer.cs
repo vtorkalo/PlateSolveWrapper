@@ -66,9 +66,10 @@
             // 
             // btnConnectMount
             // 
-            this.btnConnectMount.Location = new System.Drawing.Point(156, 16);
+            this.btnConnectMount.Location = new System.Drawing.Point(234, 25);
+            this.btnConnectMount.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnConnectMount.Name = "btnConnectMount";
-            this.btnConnectMount.Size = new System.Drawing.Size(59, 23);
+            this.btnConnectMount.Size = new System.Drawing.Size(88, 35);
             this.btnConnectMount.TabIndex = 0;
             this.btnConnectMount.Text = "Connect mount";
             this.btnConnectMount.UseVisualStyleBackColor = true;
@@ -77,9 +78,10 @@
             // btnOpenSolveAndSync
             // 
             this.btnOpenSolveAndSync.Enabled = false;
-            this.btnOpenSolveAndSync.Location = new System.Drawing.Point(12, 405);
+            this.btnOpenSolveAndSync.Location = new System.Drawing.Point(18, 623);
+            this.btnOpenSolveAndSync.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnOpenSolveAndSync.Name = "btnOpenSolveAndSync";
-            this.btnOpenSolveAndSync.Size = new System.Drawing.Size(136, 23);
+            this.btnOpenSolveAndSync.Size = new System.Drawing.Size(204, 35);
             this.btnOpenSolveAndSync.TabIndex = 1;
             this.btnOpenSolveAndSync.Text = "Open - Solve- Sync";
             this.btnOpenSolveAndSync.UseVisualStyleBackColor = true;
@@ -95,16 +97,19 @@
             this.gbSettings.Controls.Add(this.lbField);
             this.gbSettings.Controls.Add(this.numFieldHeight);
             this.gbSettings.Controls.Add(this.numFieldWidth);
-            this.gbSettings.Location = new System.Drawing.Point(12, 12);
+            this.gbSettings.Location = new System.Drawing.Point(18, 18);
+            this.gbSettings.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.gbSettings.Name = "gbSettings";
-            this.gbSettings.Size = new System.Drawing.Size(307, 107);
+            this.gbSettings.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.gbSettings.Size = new System.Drawing.Size(460, 165);
             this.gbSettings.TabIndex = 2;
             this.gbSettings.TabStop = false;
             this.gbSettings.Text = "Settings";
             // 
             // numSearchTiles
             // 
-            this.numSearchTiles.Location = new System.Drawing.Point(82, 73);
+            this.numSearchTiles.Location = new System.Drawing.Point(123, 112);
+            this.numSearchTiles.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.numSearchTiles.Maximum = new decimal(new int[] {
             9999999,
             0,
@@ -116,29 +121,30 @@
             0,
             0});
             this.numSearchTiles.Name = "numSearchTiles";
-            this.numSearchTiles.Size = new System.Drawing.Size(67, 20);
+            this.numSearchTiles.Size = new System.Drawing.Size(100, 26);
             this.numSearchTiles.TabIndex = 7;
             this.numSearchTiles.Value = new decimal(new int[] {
             1,
             0,
             0,
             0});
-            this.numSearchTiles.ValueChanged += new System.EventHandler(this.numSearchTiles_ValueChanged);
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(8, 75);
+            this.label1.Location = new System.Drawing.Point(12, 115);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(62, 13);
+            this.label1.Size = new System.Drawing.Size(92, 20);
             this.label1.TabIndex = 6;
             this.label1.Text = "Search tiles";
             // 
             // btnBrowseSolver
             // 
-            this.btnBrowseSolver.Location = new System.Drawing.Point(190, 16);
+            this.btnBrowseSolver.Location = new System.Drawing.Point(285, 25);
+            this.btnBrowseSolver.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnBrowseSolver.Name = "btnBrowseSolver";
-            this.btnBrowseSolver.Size = new System.Drawing.Size(58, 23);
+            this.btnBrowseSolver.Size = new System.Drawing.Size(87, 35);
             this.btnBrowseSolver.TabIndex = 5;
             this.btnBrowseSolver.Text = "Browse";
             this.btnBrowseSolver.UseVisualStyleBackColor = true;
@@ -147,32 +153,36 @@
             // tbPlateSolverPath
             // 
             this.tbPlateSolverPath.Enabled = false;
-            this.tbPlateSolverPath.Location = new System.Drawing.Point(106, 19);
+            this.tbPlateSolverPath.Location = new System.Drawing.Point(159, 29);
+            this.tbPlateSolverPath.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tbPlateSolverPath.Name = "tbPlateSolverPath";
-            this.tbPlateSolverPath.Size = new System.Drawing.Size(80, 20);
+            this.tbPlateSolverPath.Size = new System.Drawing.Size(118, 26);
             this.tbPlateSolverPath.TabIndex = 4;
             // 
             // lblSolverPath
             // 
             this.lblSolverPath.AutoSize = true;
-            this.lblSolverPath.Location = new System.Drawing.Point(8, 22);
+            this.lblSolverPath.Location = new System.Drawing.Point(12, 34);
+            this.lblSolverPath.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblSolverPath.Name = "lblSolverPath";
-            this.lblSolverPath.Size = new System.Drawing.Size(98, 13);
+            this.lblSolverPath.Size = new System.Drawing.Size(144, 20);
             this.lblSolverPath.TabIndex = 3;
             this.lblSolverPath.Text = "Path to PlateSolver";
             // 
             // lbField
             // 
             this.lbField.AutoSize = true;
-            this.lbField.Location = new System.Drawing.Point(7, 47);
+            this.lbField.Location = new System.Drawing.Point(10, 72);
+            this.lbField.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lbField.Name = "lbField";
-            this.lbField.Size = new System.Drawing.Size(69, 13);
+            this.lbField.Size = new System.Drawing.Size(104, 20);
             this.lbField.TabIndex = 2;
             this.lbField.Text = "Field (arcmin)";
             // 
             // numFieldHeight
             // 
-            this.numFieldHeight.Location = new System.Drawing.Point(155, 45);
+            this.numFieldHeight.Location = new System.Drawing.Point(232, 69);
+            this.numFieldHeight.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.numFieldHeight.Maximum = new decimal(new int[] {
             21600,
             0,
@@ -184,18 +194,18 @@
             0,
             0});
             this.numFieldHeight.Name = "numFieldHeight";
-            this.numFieldHeight.Size = new System.Drawing.Size(67, 20);
+            this.numFieldHeight.Size = new System.Drawing.Size(100, 26);
             this.numFieldHeight.TabIndex = 1;
             this.numFieldHeight.Value = new decimal(new int[] {
             1,
             0,
             0,
             0});
-            this.numFieldHeight.ValueChanged += new System.EventHandler(this.numFieldHeight_ValueChanged);
             // 
             // numFieldWidth
             // 
-            this.numFieldWidth.Location = new System.Drawing.Point(82, 45);
+            this.numFieldWidth.Location = new System.Drawing.Point(123, 69);
+            this.numFieldWidth.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.numFieldWidth.Maximum = new decimal(new int[] {
             21600,
             0,
@@ -207,21 +217,21 @@
             0,
             0});
             this.numFieldWidth.Name = "numFieldWidth";
-            this.numFieldWidth.Size = new System.Drawing.Size(67, 20);
+            this.numFieldWidth.Size = new System.Drawing.Size(100, 26);
             this.numFieldWidth.TabIndex = 0;
             this.numFieldWidth.Value = new decimal(new int[] {
             1,
             0,
             0,
             0});
-            this.numFieldWidth.ValueChanged += new System.EventHandler(this.numFieldWidth_ValueChanged);
             // 
             // lblScopeName
             // 
             this.lblScopeName.AutoSize = true;
-            this.lblScopeName.Location = new System.Drawing.Point(6, 16);
+            this.lblScopeName.Location = new System.Drawing.Point(9, 25);
+            this.lblScopeName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblScopeName.Name = "lblScopeName";
-            this.lblScopeName.Size = new System.Drawing.Size(78, 13);
+            this.lblScopeName.Size = new System.Drawing.Size(113, 20);
             this.lblScopeName.TabIndex = 3;
             this.lblScopeName.Text = "Not connected";
             // 
@@ -232,38 +242,39 @@
             this.gbScope.Controls.Add(this.btnDisconnect);
             this.gbScope.Controls.Add(this.lblScopeName);
             this.gbScope.Controls.Add(this.btnConnectMount);
-            this.gbScope.Location = new System.Drawing.Point(12, 125);
+            this.gbScope.Location = new System.Drawing.Point(18, 192);
+            this.gbScope.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.gbScope.Name = "gbScope";
-            this.gbScope.Size = new System.Drawing.Size(307, 98);
+            this.gbScope.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.gbScope.Size = new System.Drawing.Size(460, 151);
             this.gbScope.TabIndex = 4;
             this.gbScope.TabStop = false;
             this.gbScope.Text = "Scope";
             // 
             // tbCurrentCoordinates
             // 
-            this.tbCurrentCoordinates.Location = new System.Drawing.Point(11, 64);
-            this.tbCurrentCoordinates.Margin = new System.Windows.Forms.Padding(2);
+            this.tbCurrentCoordinates.Location = new System.Drawing.Point(16, 98);
             this.tbCurrentCoordinates.Name = "tbCurrentCoordinates";
             this.tbCurrentCoordinates.ReadOnly = true;
-            this.tbCurrentCoordinates.Size = new System.Drawing.Size(285, 20);
+            this.tbCurrentCoordinates.Size = new System.Drawing.Size(426, 26);
             this.tbCurrentCoordinates.TabIndex = 7;
             // 
             // lblCurrentCoordinates
             // 
             this.lblCurrentCoordinates.AutoSize = true;
-            this.lblCurrentCoordinates.Location = new System.Drawing.Point(8, 49);
-            this.lblCurrentCoordinates.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblCurrentCoordinates.Location = new System.Drawing.Point(12, 75);
             this.lblCurrentCoordinates.Name = "lblCurrentCoordinates";
-            this.lblCurrentCoordinates.Size = new System.Drawing.Size(99, 13);
+            this.lblCurrentCoordinates.Size = new System.Drawing.Size(149, 20);
             this.lblCurrentCoordinates.TabIndex = 6;
             this.lblCurrentCoordinates.Text = "Current coordinates";
             // 
             // btnDisconnect
             // 
             this.btnDisconnect.Enabled = false;
-            this.btnDisconnect.Location = new System.Drawing.Point(221, 16);
+            this.btnDisconnect.Location = new System.Drawing.Point(332, 25);
+            this.btnDisconnect.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnDisconnect.Name = "btnDisconnect";
-            this.btnDisconnect.Size = new System.Drawing.Size(75, 23);
+            this.btnDisconnect.Size = new System.Drawing.Size(112, 35);
             this.btnDisconnect.TabIndex = 5;
             this.btnDisconnect.Text = "Disconnect";
             this.btnDisconnect.UseVisualStyleBackColor = true;
@@ -273,11 +284,9 @@
             // 
             this.gbSolveResult.Controls.Add(this.lblSolvedFileName);
             this.gbSolveResult.Controls.Add(this.tbSolvedCoordinates);
-            this.gbSolveResult.Location = new System.Drawing.Point(12, 336);
-            this.gbSolveResult.Margin = new System.Windows.Forms.Padding(2);
+            this.gbSolveResult.Location = new System.Drawing.Point(18, 517);
             this.gbSolveResult.Name = "gbSolveResult";
-            this.gbSolveResult.Padding = new System.Windows.Forms.Padding(2);
-            this.gbSolveResult.Size = new System.Drawing.Size(307, 64);
+            this.gbSolveResult.Size = new System.Drawing.Size(460, 98);
             this.gbSolveResult.TabIndex = 5;
             this.gbSolveResult.TabStop = false;
             this.gbSolveResult.Text = "Solve Result";
@@ -285,20 +294,18 @@
             // lblSolvedFileName
             // 
             this.lblSolvedFileName.AutoSize = true;
-            this.lblSolvedFileName.Location = new System.Drawing.Point(8, 23);
-            this.lblSolvedFileName.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.lblSolvedFileName.Location = new System.Drawing.Point(12, 35);
             this.lblSolvedFileName.Name = "lblSolvedFileName";
-            this.lblSolvedFileName.Size = new System.Drawing.Size(52, 13);
+            this.lblSolvedFileName.Size = new System.Drawing.Size(78, 20);
             this.lblSolvedFileName.TabIndex = 10;
             this.lblSolvedFileName.Text = "File name";
             // 
             // tbSolvedCoordinates
             // 
-            this.tbSolvedCoordinates.Location = new System.Drawing.Point(9, 38);
-            this.tbSolvedCoordinates.Margin = new System.Windows.Forms.Padding(2);
+            this.tbSolvedCoordinates.Location = new System.Drawing.Point(14, 58);
             this.tbSolvedCoordinates.Name = "tbSolvedCoordinates";
             this.tbSolvedCoordinates.ReadOnly = true;
-            this.tbSolvedCoordinates.Size = new System.Drawing.Size(287, 20);
+            this.tbSolvedCoordinates.Size = new System.Drawing.Size(428, 26);
             this.tbSolvedCoordinates.TabIndex = 9;
             // 
             // gbCamera
@@ -308,16 +315,19 @@
             this.gbCamera.Controls.Add(this.btnDisconnectCamera);
             this.gbCamera.Controls.Add(this.lblCameraName);
             this.gbCamera.Controls.Add(this.btnConnectCamera);
-            this.gbCamera.Location = new System.Drawing.Point(12, 230);
+            this.gbCamera.Location = new System.Drawing.Point(18, 354);
+            this.gbCamera.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.gbCamera.Name = "gbCamera";
-            this.gbCamera.Size = new System.Drawing.Size(307, 101);
+            this.gbCamera.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.gbCamera.Size = new System.Drawing.Size(460, 155);
             this.gbCamera.TabIndex = 6;
             this.gbCamera.TabStop = false;
             this.gbCamera.Text = "Camera";
             // 
             // numExposure
             // 
-            this.numExposure.Location = new System.Drawing.Point(82, 45);
+            this.numExposure.Location = new System.Drawing.Point(123, 69);
+            this.numExposure.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.numExposure.Maximum = new decimal(new int[] {
             99999,
             0,
@@ -329,30 +339,31 @@
             0,
             0});
             this.numExposure.Name = "numExposure";
-            this.numExposure.Size = new System.Drawing.Size(83, 20);
+            this.numExposure.Size = new System.Drawing.Size(124, 26);
             this.numExposure.TabIndex = 10;
             this.numExposure.Value = new decimal(new int[] {
             1,
             0,
             0,
             0});
-            this.numExposure.ValueChanged += new System.EventHandler(this.numExposure_ValueChanged);
             // 
             // lblExposure
             // 
             this.lblExposure.AutoSize = true;
-            this.lblExposure.Location = new System.Drawing.Point(10, 47);
+            this.lblExposure.Location = new System.Drawing.Point(15, 72);
+            this.lblExposure.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblExposure.Name = "lblExposure";
-            this.lblExposure.Size = new System.Drawing.Size(65, 13);
+            this.lblExposure.Size = new System.Drawing.Size(98, 20);
             this.lblExposure.TabIndex = 9;
             this.lblExposure.Text = "Exposure (s)";
             // 
             // btnDisconnectCamera
             // 
             this.btnDisconnectCamera.Enabled = false;
-            this.btnDisconnectCamera.Location = new System.Drawing.Point(221, 16);
+            this.btnDisconnectCamera.Location = new System.Drawing.Point(332, 25);
+            this.btnDisconnectCamera.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnDisconnectCamera.Name = "btnDisconnectCamera";
-            this.btnDisconnectCamera.Size = new System.Drawing.Size(75, 23);
+            this.btnDisconnectCamera.Size = new System.Drawing.Size(112, 35);
             this.btnDisconnectCamera.TabIndex = 8;
             this.btnDisconnectCamera.Text = "Disconnect";
             this.btnDisconnectCamera.UseVisualStyleBackColor = true;
@@ -361,17 +372,19 @@
             // lblCameraName
             // 
             this.lblCameraName.AutoSize = true;
-            this.lblCameraName.Location = new System.Drawing.Point(8, 21);
+            this.lblCameraName.Location = new System.Drawing.Point(12, 32);
+            this.lblCameraName.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblCameraName.Name = "lblCameraName";
-            this.lblCameraName.Size = new System.Drawing.Size(78, 13);
+            this.lblCameraName.Size = new System.Drawing.Size(113, 20);
             this.lblCameraName.TabIndex = 7;
             this.lblCameraName.Text = "Not connected";
             // 
             // btnConnectCamera
             // 
-            this.btnConnectCamera.Location = new System.Drawing.Point(156, 16);
+            this.btnConnectCamera.Location = new System.Drawing.Point(234, 25);
+            this.btnConnectCamera.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnConnectCamera.Name = "btnConnectCamera";
-            this.btnConnectCamera.Size = new System.Drawing.Size(59, 23);
+            this.btnConnectCamera.Size = new System.Drawing.Size(88, 35);
             this.btnConnectCamera.TabIndex = 6;
             this.btnConnectCamera.Text = "Connect mount";
             this.btnConnectCamera.UseVisualStyleBackColor = true;
@@ -380,9 +393,10 @@
             // btnShotSolveSync
             // 
             this.btnShotSolveSync.Enabled = false;
-            this.btnShotSolveSync.Location = new System.Drawing.Point(184, 404);
+            this.btnShotSolveSync.Location = new System.Drawing.Point(276, 622);
+            this.btnShotSolveSync.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnShotSolveSync.Name = "btnShotSolveSync";
-            this.btnShotSolveSync.Size = new System.Drawing.Size(136, 23);
+            this.btnShotSolveSync.Size = new System.Drawing.Size(204, 35);
             this.btnShotSolveSync.TabIndex = 7;
             this.btnShotSolveSync.Text = "Shot - Solve- Sync";
             this.btnShotSolveSync.UseVisualStyleBackColor = true;
@@ -390,15 +404,16 @@
             // 
             // fmMain
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(332, 439);
+            this.ClientSize = new System.Drawing.Size(498, 675);
             this.Controls.Add(this.btnShotSolveSync);
             this.Controls.Add(this.gbCamera);
             this.Controls.Add(this.gbSolveResult);
             this.Controls.Add(this.gbScope);
             this.Controls.Add(this.gbSettings);
             this.Controls.Add(this.btnOpenSolveAndSync);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
             this.Name = "fmMain";
             this.Text = "Plate Solver Wrapper";

@@ -13,8 +13,8 @@ namespace PlateSolveWrapper
             Exposure = 10;
         }
 
-        public double FieldWidth { get; set; }
-        public double FieldHeight { get; set; }
+        public int FieldWidth { get; set; }
+        public int FieldHeight { get; set; }
         public string SolverPath { get; set; }
         public int SearchTiles { get; set; }
         public string LastImagePath { get; set; }
