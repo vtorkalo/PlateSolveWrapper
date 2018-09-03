@@ -83,7 +83,6 @@
     <Compile Include="GeoAngle.cs" />
     <Compile Include="ImageHelper.cs" />
     <Compile Include="MathHelpers.cs" />
-    <Compile Include="NumberToByteArray.cs" />
     <Compile Include="BEOS\OTelescopeTcpClient.cs" />
     <Compile Include="PlateSolver.cs" />
     <Compile Include="Program.cs" />
