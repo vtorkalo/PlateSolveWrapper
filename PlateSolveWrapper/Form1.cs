@@ -67,13 +67,13 @@ namespace PlateSolveWrapper
         {
             try
             {
-                ConnectTelescope();
-                UpdateUiState();
+                ConnectTelescope();                
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Failed to connect telescope");
             }
+            UpdateUiState();
         }
 
         private void SolveAndSync(string fileName)
@@ -96,6 +96,8 @@ namespace PlateSolveWrapper
             }
             else
             {
+                tbSolvedCoordinates.Text = string.Empty;
+                lblSolvedFileName.Text = string.Empty;
                 MessageBox.Show("Sync failed");
             }
         }
@@ -192,9 +194,9 @@ namespace PlateSolveWrapper
 
         private string GetCoordinatesStr(double ra, double dec)
         {
-            var raAngle = GeoAngle.FromDouble(ra);
-            var decAngle = GeoAngle.FromDouble(dec);
-            string decSign = decAngle.IsNegative ? "" : "+";
+            var raAngle = _util.HoursToHMS(ra);
+            var decAngle = _util.DegreesToDMS(dec);
+            string decSign = dec >= 0? "+" : "";
             string result = string.Format("RA: {0}, DEC: {1}{2}", raAngle.ToString(), decSign, decAngle.ToString());
 
             return result;
@@ -204,13 +206,13 @@ namespace PlateSolveWrapper
         {
             try
             {
-                ConnectCamera();
-                UpdateUiState();
+                ConnectCamera();                
             }
             catch(Exception ex)
             {
                 MessageBox.Show("Failed to connect camera");
             }
+            UpdateUiState();
         }
 
         private void btnDisconnectCamera_Click(object sender, EventArgs e)
@@ -244,7 +246,7 @@ namespace PlateSolveWrapper
                 OpenFileDialog dialog = new OpenFileDialog();
                 dialog.Title = "Open Image";
                 dialog.InitialDirectory = _settings.LastImagePath;
-                dialog.Filter = "Images|*.jpg;*.jpeg;*.tiff;*.tif;*.fit;*.fits;";
+                dialog.Filter = "Images|*.jpg;*.jpeg;*.fit;*.fits;";
 
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
@@ -271,8 +273,8 @@ namespace PlateSolveWrapper
                     _util.WaitForMilliseconds(300);
                 }
                 var array = (Array)_camera.ImageArray;
-                var bmp = ImageHelper.GetBitmapColor((Array)_camera.ImageArray);
-                bmp.Save(fileName, ImageFormat.Jpeg);
+                var bmp = ImageHelper.GetBitmap((Array)_camera.ImageArray, _camera.MaxADU);
+                ImageHelper.SaveBmp(bmp, fileName);
                 SolveAndSync(fileName);
             }
             catch (Exception ex)

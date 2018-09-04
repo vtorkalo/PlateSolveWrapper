@@ -16,16 +16,16 @@ namespace PlateSolveWrapper
     {
 
 
-        public static Bitmap GetBitmapMonochrome(Array data)
+        public static Bitmap GetMonochromeBitmap(int[,] data, int maxAdu)
         {
             int IMAGE_WIDTH = data.GetLength(0);
             int IMAGE_HEIGHT = data.GetLength(1);
-            var b16bpp = new Bitmap(IMAGE_WIDTH, IMAGE_HEIGHT, System.Drawing.Imaging.PixelFormat.Format16bppGrayScale);
+            var b16bpp = new Bitmap(IMAGE_WIDTH, IMAGE_HEIGHT, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
 
             var rect = new Rectangle(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
             var bitmapData = b16bpp.LockBits(rect, ImageLockMode.WriteOnly, b16bpp.PixelFormat);
             var numberOfBytes = bitmapData.Stride * IMAGE_HEIGHT;
-            var bitmapBytes = new short[IMAGE_WIDTH * IMAGE_HEIGHT];
+            var bitmapBytes = new byte[IMAGE_WIDTH * IMAGE_HEIGHT];
             var random = new Random();
 
             for (int x = 0; x < IMAGE_WIDTH; x++)
@@ -33,8 +33,7 @@ namespace PlateSolveWrapper
                 for (int y = 0; y < IMAGE_HEIGHT; y++)
                 {
                     var i = ((y * IMAGE_WIDTH) + x);
-                    var value = (int)data.GetValue(x, y);
-                    bitmapBytes[i] = (short)value;
+                    bitmapBytes[i] = ScaleToByte(data[x, y], maxAdu);
                 }
             }
 
@@ -45,17 +44,17 @@ namespace PlateSolveWrapper
             return b16bpp;
         }
 
-        public static Bitmap GetBitmapColor(Array data)
+
+        public static Bitmap GetColorBitmap(int[,,] data, int maxAdu)
         {
-            bool isMonochrome = data.Rank == 2;
             int IMAGE_WIDTH = data.GetLength(0);
             int IMAGE_HEIGHT = data.GetLength(1);
-            var bitmapColor = new Bitmap(IMAGE_WIDTH, IMAGE_HEIGHT, System.Drawing.Imaging.PixelFormat.Format64bppArgb);
+            var bitmapColor = new Bitmap(IMAGE_WIDTH, IMAGE_HEIGHT, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
 
             var rect = new Rectangle(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
             var bitmapData = bitmapColor.LockBits(rect, ImageLockMode.ReadOnly, bitmapColor.PixelFormat);
             var numberOfBytes = bitmapData.Stride * IMAGE_HEIGHT;
-            var bitmapBytes = new long[IMAGE_WIDTH * IMAGE_HEIGHT];
+            var bitmapBytes = new int[IMAGE_WIDTH * IMAGE_HEIGHT];
 
             for (int x = 0; x < IMAGE_WIDTH; x++)
             {
@@ -63,24 +62,16 @@ namespace PlateSolveWrapper
                 {
                     var i = y * IMAGE_WIDTH + x;
 
-                    ushort r, g, b, a = 0;
+                    byte a = 0;
+                    byte b = ScaleToByte(data[x, y, 0], maxAdu);
+                    byte g = ScaleToByte(data[x, y, 1], maxAdu);
+                    byte r = ScaleToByte(data[x, y, 2], maxAdu);
 
-                    if (isMonochrome)
-                    {
-                        r = g = b = (ushort)((int)data.GetValue(x, y));
-                    }
-                    else
-                    {
-                        b = (ushort)((int)data.GetValue(x, y, 0));
-                        g = (ushort)((int)data.GetValue(x, y, 1));
-                        r = (ushort)((int)data.GetValue(x, y, 2));
-                    }
+                    byte[] source = new byte[] { b, g, r, a };
+                    byte[] target = new byte[source.Length * sizeof(byte)];
+                    Buffer.BlockCopy(source, 0, target, 0, source.Length * sizeof(byte));
 
-                    ushort[] source = new ushort[] { b, g, r, a };
-                    byte[] target = new byte[source.Length * sizeof(ushort)];
-                    Buffer.BlockCopy(source, 0, target, 0, source.Length * sizeof(ushort));
-
-                    bitmapBytes[i] = BitConverter.ToInt64(target, 0);
+                    bitmapBytes[i] = BitConverter.ToInt32(target, 0);
                 }
             }
 
@@ -88,8 +79,37 @@ namespace PlateSolveWrapper
             Marshal.Copy(bitmapBytes, 0, ptr, bitmapBytes.Length);
             bitmapColor.UnlockBits(bitmapData);
 
-
             return bitmapColor;
+        }
+
+        public static Bitmap GetBitmap(Array data, int maxAdu)
+        {
+            if (data.Rank == 2)
+            {
+                return GetMonochromeBitmap((int[,])data, maxAdu);
+            }
+            else if (data.Rank == 3)
+            {
+                return GetColorBitmap((int[,,])data, maxAdu);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private static byte ScaleToByte(int value, int maxValue)
+        {
+            if (maxValue <= byte.MaxValue)
+            {
+                return (byte)value;
+            }
+
+            double scale = (double)value / (double)maxValue;
+
+            byte result = (byte)(byte.MaxValue * scale);
+
+            return result;
         }
 
         public static void SaveBmp(Bitmap bmp, string path)
@@ -115,9 +135,9 @@ namespace PlateSolveWrapper
 
             FileStream stream = new FileStream(path, FileMode.Create);
 
-            TiffBitmapEncoder encoder = new TiffBitmapEncoder();
+            JpegBitmapEncoder encoder = new JpegBitmapEncoder();
 
-            encoder.Compression = TiffCompressOption.Zip;
+           // encoder.Compression = TiffCompressOption.Zip;
             encoder.Frames.Add(BitmapFrame.Create(source));
             encoder.Save(stream);
 
@@ -140,6 +160,12 @@ namespace PlateSolveWrapper
 
                 case System.Drawing.Imaging.PixelFormat.Format16bppGrayScale:
                     pixelFormats = PixelFormats.Gray16;
+                    break;
+                case System.Drawing.Imaging.PixelFormat.Format64bppArgb:
+                    pixelFormats = PixelFormats.Rgba64;
+                    break;
+                case System.Drawing.Imaging.PixelFormat.Format32bppRgb:
+                    pixelFormats = PixelFormats.Bgra32;
                     break;
             }
 
