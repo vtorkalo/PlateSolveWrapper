@@ -45,6 +45,7 @@
             this.lblCurrentCoordinates = new System.Windows.Forms.Label();
             this.btnDisconnect = new System.Windows.Forms.Button();
             this.gbSolveResult = new System.Windows.Forms.GroupBox();
+            this.lblStatus = new System.Windows.Forms.Label();
             this.lblSolvedFileName = new System.Windows.Forms.Label();
             this.tbSolvedCoordinates = new System.Windows.Forms.TextBox();
             this.gbCamera = new System.Windows.Forms.GroupBox();
@@ -54,6 +55,7 @@
             this.lblCameraName = new System.Windows.Forms.Label();
             this.btnConnectCamera = new System.Windows.Forms.Button();
             this.btnShotSolveSync = new System.Windows.Forms.Button();
+            this.btnAbort = new System.Windows.Forms.Button();
             this.gbSettings.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numSearchTiles)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numFieldHeight)).BeginInit();
@@ -77,9 +79,9 @@
             // btnOpenSolveAndSync
             // 
             this.btnOpenSolveAndSync.Enabled = false;
-            this.btnOpenSolveAndSync.Location = new System.Drawing.Point(11, 458);
+            this.btnOpenSolveAndSync.Location = new System.Drawing.Point(11, 494);
             this.btnOpenSolveAndSync.Name = "btnOpenSolveAndSync";
-            this.btnOpenSolveAndSync.Size = new System.Drawing.Size(136, 23);
+            this.btnOpenSolveAndSync.Size = new System.Drawing.Size(129, 23);
             this.btnOpenSolveAndSync.TabIndex = 1;
             this.btnOpenSolveAndSync.Text = "Open - Solve- Sync";
             this.btnOpenSolveAndSync.UseVisualStyleBackColor = true;
@@ -239,7 +241,7 @@
             // tbCurrentCoordinates
             // 
             this.tbCurrentCoordinates.Location = new System.Drawing.Point(11, 98);
-            this.tbCurrentCoordinates.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tbCurrentCoordinates.Margin = new System.Windows.Forms.Padding(2);
             this.tbCurrentCoordinates.Name = "tbCurrentCoordinates";
             this.tbCurrentCoordinates.ReadOnly = true;
             this.tbCurrentCoordinates.Size = new System.Drawing.Size(285, 20);
@@ -268,16 +270,26 @@
             // 
             // gbSolveResult
             // 
+            this.gbSolveResult.Controls.Add(this.lblStatus);
             this.gbSolveResult.Controls.Add(this.lblSolvedFileName);
             this.gbSolveResult.Controls.Add(this.tbSolvedCoordinates);
             this.gbSolveResult.Location = new System.Drawing.Point(11, 379);
-            this.gbSolveResult.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.gbSolveResult.Margin = new System.Windows.Forms.Padding(2);
             this.gbSolveResult.Name = "gbSolveResult";
-            this.gbSolveResult.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.gbSolveResult.Size = new System.Drawing.Size(307, 73);
+            this.gbSolveResult.Padding = new System.Windows.Forms.Padding(2);
+            this.gbSolveResult.Size = new System.Drawing.Size(307, 95);
             this.gbSolveResult.TabIndex = 5;
             this.gbSolveResult.TabStop = false;
             this.gbSolveResult.Text = "Solve Result";
+            // 
+            // lblStatus
+            // 
+            this.lblStatus.AutoSize = true;
+            this.lblStatus.Location = new System.Drawing.Point(9, 64);
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Size = new System.Drawing.Size(37, 13);
+            this.lblStatus.TabIndex = 11;
+            this.lblStatus.Text = "Status";
             // 
             // lblSolvedFileName
             // 
@@ -292,7 +304,7 @@
             // tbSolvedCoordinates
             // 
             this.tbSolvedCoordinates.Location = new System.Drawing.Point(9, 38);
-            this.tbSolvedCoordinates.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tbSolvedCoordinates.Margin = new System.Windows.Forms.Padding(2);
             this.tbSolvedCoordinates.Name = "tbSolvedCoordinates";
             this.tbSolvedCoordinates.ReadOnly = true;
             this.tbSolvedCoordinates.Size = new System.Drawing.Size(287, 20);
@@ -376,19 +388,31 @@
             // btnShotSolveSync
             // 
             this.btnShotSolveSync.Enabled = false;
-            this.btnShotSolveSync.Location = new System.Drawing.Point(183, 457);
+            this.btnShotSolveSync.Location = new System.Drawing.Point(189, 494);
             this.btnShotSolveSync.Name = "btnShotSolveSync";
-            this.btnShotSolveSync.Size = new System.Drawing.Size(136, 23);
+            this.btnShotSolveSync.Size = new System.Drawing.Size(129, 23);
             this.btnShotSolveSync.TabIndex = 7;
             this.btnShotSolveSync.Text = "Shot - Solve- Sync";
             this.btnShotSolveSync.UseVisualStyleBackColor = true;
             this.btnShotSolveSync.Click += new System.EventHandler(this.btnShotSolveSync_Click);
             // 
+            // btnAbort
+            // 
+            this.btnAbort.Enabled = false;
+            this.btnAbort.Location = new System.Drawing.Point(243, 523);
+            this.btnAbort.Name = "btnAbort";
+            this.btnAbort.Size = new System.Drawing.Size(75, 23);
+            this.btnAbort.TabIndex = 8;
+            this.btnAbort.Text = "Abort";
+            this.btnAbort.UseVisualStyleBackColor = true;
+            this.btnAbort.Click += new System.EventHandler(this.btnAbort_Click);
+            // 
             // fmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(332, 492);
+            this.ClientSize = new System.Drawing.Size(332, 557);
+            this.Controls.Add(this.btnAbort);
             this.Controls.Add(this.btnShotSolveSync);
             this.Controls.Add(this.gbCamera);
             this.Controls.Add(this.gbSolveResult);
@@ -443,6 +467,8 @@
         private System.Windows.Forms.NumericUpDown numExposure;
         private System.Windows.Forms.Label lblExposure;
         private System.Windows.Forms.Button btnShotSolveSync;
+        private System.Windows.Forms.Label lblStatus;
+        private System.Windows.Forms.Button btnAbort;
     }
 }
 

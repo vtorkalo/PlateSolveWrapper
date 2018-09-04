@@ -3,6 +3,8 @@ using ASCOM.Utilities;
 using System;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace PlateSolveWrapper
@@ -17,10 +19,12 @@ namespace PlateSolveWrapper
         private Settings _settings;
         private System.Windows.Forms.Timer _timer;
         private Util _util = new Util();
-
+        private readonly SynchronizationContext _synchronizationContext;
+        private bool _aborted = false;
         public fmMain()
         {
             InitializeComponent();
+            _synchronizationContext = SynchronizationContext.Current;
             _settingsProvider = new SettingsProvider(settingsFileName);
             _settings = _settingsProvider.ReadSettings();
             _timer = new System.Windows.Forms.Timer();
@@ -176,7 +180,7 @@ namespace PlateSolveWrapper
             return connected;
         }
 
-        private void UpdateUiState()
+        private void UpdateUiState(string progressMessage = "")
         {
             bool scopeConnected = IsScopeConnected();
             btnConnectMount.Enabled = !scopeConnected;
@@ -190,6 +194,20 @@ namespace PlateSolveWrapper
             btnDisconnectCamera.Enabled = cameraConnected;
             lblCameraName.Text = cameraConnected ? _camera.Name : "Not connected";
             btnShotSolveSync.Enabled = scopeConnected && cameraConnected;
+
+
+            bool isIdle = cameraConnected && _camera.CameraState == ASCOM.DeviceInterface.CameraStates.cameraIdle;
+            btnShotSolveSync.Enabled = isIdle;
+            bool isExposing = cameraConnected && _camera.CameraState == ASCOM.DeviceInterface.CameraStates.cameraExposing;
+
+            btnOpenSolveAndSync.Enabled = !isExposing;
+
+            if (!string.IsNullOrEmpty(progressMessage))
+            {
+                lblStatus.Text = progressMessage;
+            }
+
+            btnAbort.Enabled = _longRunningOperation;
         }
 
         private string GetCoordinatesStr(double ra, double dec)
@@ -259,29 +277,86 @@ namespace PlateSolveWrapper
             }
         }
 
-        private void btnShotSolveSync_Click(object sender, EventArgs e)
+        private async void btnShotSolveSync_Click(object sender, EventArgs e)
         {
-            try
-            {
-                ReadSettingsFromUi();
-                string fileName = Path.Combine(
-                    System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
-                    "temp.jpg");
-                _camera.StartExposure(_settings.Exposure, true);
-                while (!_camera.ImageReady)
+           await ShotSolveSync();
+        }    
+
+        private async Task ShotSolveSync()
+        {
+            await Task.Run(()=>{
+                try
                 {
-                    _util.WaitForMilliseconds(300);
+                    _longRunningOperation = true;
+                    ReadSettingsFromUi();
+                    string fileName = Path.Combine(
+                        System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                        "temp.jpg");
+                    _camera.StartExposure(_settings.Exposure, true);
+                    Update("Exposure...");
+                    while (!_camera.ImageReady)
+                    {
+                       _util.WaitForMilliseconds(300);
+                        CheckAbortState();
+                    }
+
+                    Update("Reading image...");
+                    var array = (Array)_camera.ImageArray;
+                    var bmp = ImageHelper.GetBitmap((Array)_camera.ImageArray, _camera.MaxADU);
+                    ImageHelper.SaveBmp(bmp, fileName);
+                    Update("Solving...");
+                    SolveAndSync(fileName);
                 }
-                var array = (Array)_camera.ImageArray;
-                var bmp = ImageHelper.GetBitmap((Array)_camera.ImageArray, _camera.MaxADU);
-                ImageHelper.SaveBmp(bmp, fileName);
-                SolveAndSync(fileName);
-            }
-            catch (Exception ex)
+                catch (OperationCanceledException)
+                {
+                    _aborted = false;
+                    Update("Aborted");
+                    if (_camera.CameraState == ASCOM.DeviceInterface.CameraStates.cameraExposing)
+                    {
+                        _camera.AbortExposure();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                _longRunningOperation = false;
+            });
+        }
+
+        private void Update(string status)
+        {
+            _synchronizationContext.Post(c =>
             {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                string msg = c as string;
+                UpdateUiState(msg);
+            }, status);
+        }
+
+        public static void Do<TControl>(TControl control, Action<TControl> action) where TControl : Control
+        {
+            if (control.InvokeRequired)
+            {
+                control.Invoke(action, control);
+            }
+            else
+            {
+                action(control);
             }
         }
 
+        private void CheckAbortState()
+        {
+            if (_aborted)
+            {
+                throw new OperationCanceledException();
+            }
+        }
+        private bool _longRunningOperation;
+
+        private void btnAbort_Click(object sender, EventArgs e)
+        {
+            _aborted = true;
+        }
     }
 }
