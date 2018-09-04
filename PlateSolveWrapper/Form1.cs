@@ -34,6 +34,31 @@ namespace PlateSolveWrapper
             UnitSettingsUI();
 
             _plateSolver = new PlateSolver();
+            _plateSolver.PlateSolveFinished += _plateSolver_PlateSolveFinished;
+        }
+
+        private void _plateSolver_PlateSolveFinished(object sender, PlateSolveEventArgs e)
+        {
+            isProcessing = false;
+            if (e.Coordinate != null)
+            {
+                _telescope.SyncToCoordinates(e.Coordinate.Ra, e.Coordinate.Dec);
+                _synchronizationContext.Post(o =>
+                {
+                    tbSolvedCoordinates.Text = string.Format("{0}, Angle: {1:0.##}", GetCoordinatesStr(e.Coordinate.Ra, e.Coordinate.Dec), e.Coordinate.CameraAngle);
+                    lblSolvedFileName.Text = Path.GetFileName(e.FileName);
+                }, e);
+                Update("Solve successful");
+            }
+            else
+            {
+                _synchronizationContext.Post(o =>
+                {
+                    tbSolvedCoordinates.Text = string.Empty;
+                    lblSolvedFileName.Text = string.Empty;
+                    Update("Solve failed");
+                }, null);
+            }
         }
 
         private void _timer_Tick(object sender, EventArgs e)
@@ -81,29 +106,25 @@ namespace PlateSolveWrapper
         }
 
         private void SolveAndSync(string fileName)
-        {
+        {            
             _settings.LastImagePath = Path.GetFullPath(fileName);
 
-            var coords = _plateSolver.PlateSolve(fileName,
+            _plateSolver.StartPlateSolve(fileName,
                                                 _telescope.RightAscension,
                                                 _telescope.Declination,
                                                 _settings.FieldWidth,
                                                 _settings.FieldHeight,
                                                 _settings.SearchTiles,
                                                 _settings.SolverPath);
-            if (coords != null)
-            {
-                _telescope.SyncToCoordinates(coords.Ra, coords.Dec);
-                tbSolvedCoordinates.Text = string.Format("{0}, Angle: {1:0.##}", GetCoordinatesStr(coords.Ra, coords.Dec), coords.CameraAngle);
-                lblSolvedFileName.Text = Path.GetFileName(fileName);
-                MessageBox.Show("Sync successful");
-            }
-            else
-            {
-                tbSolvedCoordinates.Text = string.Empty;
+           
+        }
+
+        private void ClearResult()
+        {
+            _synchronizationContext.Post(o => {
                 lblSolvedFileName.Text = string.Empty;
-                MessageBox.Show("Sync failed");
-            }
+                tbSolvedCoordinates.Text = "";
+            }, null);
         }
 
         public void ConnectTelescope()
@@ -193,21 +214,23 @@ namespace PlateSolveWrapper
             btnConnectCamera.Enabled = !cameraConnected;
             btnDisconnectCamera.Enabled = cameraConnected;
             lblCameraName.Text = cameraConnected ? _camera.Name : "Not connected";
-            btnShotSolveSync.Enabled = scopeConnected && cameraConnected;
+            btnShotSolveSync.Enabled = scopeConnected && cameraConnected && !isProcessing;
 
 
             bool isIdle = cameraConnected && _camera.CameraState == ASCOM.DeviceInterface.CameraStates.cameraIdle;
-            btnShotSolveSync.Enabled = isIdle;
-            bool isExposing = cameraConnected && _camera.CameraState == ASCOM.DeviceInterface.CameraStates.cameraExposing;
-
-            btnOpenSolveAndSync.Enabled = !isExposing;
+            btnShotSolveSync.Enabled = scopeConnected && isIdle && !isProcessing;
+            btnOpenSolveAndSync.Enabled = !isProcessing;
 
             if (!string.IsNullOrEmpty(progressMessage))
             {
                 lblStatus.Text = progressMessage;
             }
 
-            btnAbort.Enabled = _longRunningOperation;
+            btnAbort.Enabled = isProcessing;
+
+            gbScope.Enabled = !isProcessing;
+            gbCamera.Enabled = !isProcessing;
+            gbSettings.Enabled = !isProcessing;
         }
 
         private string GetCoordinatesStr(double ra, double dec)
@@ -260,6 +283,7 @@ namespace PlateSolveWrapper
         {
             try
             {
+                isProcessing = true;
                 ReadSettingsFromUi();
                 OpenFileDialog dialog = new OpenFileDialog();
                 dialog.Title = "Open Image";
@@ -268,13 +292,14 @@ namespace PlateSolveWrapper
 
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
+                    ClearResult();
                     SolveAndSync(dialog.FileName);
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            }            
         }
 
         private async void btnShotSolveSync_Click(object sender, EventArgs e)
@@ -287,7 +312,8 @@ namespace PlateSolveWrapper
             await Task.Run(()=>{
                 try
                 {
-                    _longRunningOperation = true;
+                    ClearResult();
+                    isProcessing = true;
                     ReadSettingsFromUi();
                     string fileName = Path.Combine(
                         System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
@@ -306,6 +332,7 @@ namespace PlateSolveWrapper
                     ImageHelper.SaveBmp(bmp, fileName);
                     Update("Solving...");
                     SolveAndSync(fileName);
+                    Update();
                 }
                 catch (OperationCanceledException)
                 {
@@ -315,16 +342,16 @@ namespace PlateSolveWrapper
                     {
                         _camera.AbortExposure();
                     }
+                    isProcessing = false;
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                _longRunningOperation = false;
             });
         }
 
-        private void Update(string status)
+        private void Update(string status = "")
         {
             _synchronizationContext.Post(c =>
             {
@@ -352,7 +379,7 @@ namespace PlateSolveWrapper
                 throw new OperationCanceledException();
             }
         }
-        private bool _longRunningOperation;
+        private bool isProcessing;
 
         private void btnAbort_Click(object sender, EventArgs e)
         {

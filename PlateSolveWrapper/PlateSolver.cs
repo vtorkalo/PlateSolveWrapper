@@ -7,10 +7,9 @@ namespace PlateSolveWrapper
 {
     public class PlateSolver
     {
-        public Coordinate PlateSolve(string fileName, double ra, double dec, double fieldWidth, double fieldHeight, int maxTiles, string solverPath)
+        private string _fileName;
+        public void StartPlateSolve(string fileName, double ra, double dec, double fieldWidth, double fieldHeight, int maxTiles, string solverPath)
         {
-            Coordinate coordinates = null;
-
             try
             {
                 var proc = new System.Diagnostics.Process();
@@ -24,22 +23,25 @@ namespace PlateSolveWrapper
                     maxTiles.ToString() + "," +                                                                                      // кол-во элемнетов спирали
                     fileName + "," +                                                                                // имя фита
                     "0";
+                proc.EnableRaisingEvents = true;
+                proc.Exited += Proc_Exited;
+                _fileName = fileName;
                 proc.Start();
-                proc.WaitForExit();
-
-                string apmFileName = Path.Combine(
-                    Path.GetDirectoryName(fileName),
-                    Path.ChangeExtension(Path.GetFileNameWithoutExtension(fileName), "apm")
-                );
-
-                coordinates = ReadApmFile(apmFileName);
             }
             catch (Exception ex)
             {
                 throw new Exception("Failed to start plate solver. Please check solver location.", ex);
             }
+        }
 
-            return coordinates;
+        private void Proc_Exited(object sender, EventArgs e)
+        {
+            string apmFileName = Path.Combine(
+                    Path.GetDirectoryName(_fileName),
+                    Path.ChangeExtension(Path.GetFileNameWithoutExtension(_fileName), "apm")
+                );
+             var coordinates = ReadApmFile(apmFileName);
+            RaisePlateSolveFinished(coordinates, _fileName);
         }
 
         private Coordinate ReadApmFile(string fileName)
@@ -68,6 +70,17 @@ namespace PlateSolveWrapper
             }
 
             return result;
+        }
+
+        public delegate void PlateSolveEventHandler(object sender, PlateSolveEventArgs e);
+
+        public event PlateSolveEventHandler PlateSolveFinished;
+        
+        protected virtual void RaisePlateSolveFinished(Coordinate coordinate, string fileName)
+        {
+            // Raise the event by using the () operator.
+            if (PlateSolveFinished != null)
+                PlateSolveFinished(this, new PlateSolveEventArgs(coordinate, fileName));
         }
 
         private string HandleSeparators(string input)
@@ -101,5 +114,16 @@ namespace PlateSolveWrapper
 
             return result;
         }
+    }
+
+    public class PlateSolveEventArgs
+    {
+        public PlateSolveEventArgs(Coordinate c, string fileName)
+        {
+            Coordinate = c;
+            FileName = fileName;
+        }
+        public Coordinate Coordinate { get; private set; }
+        public string FileName { get; private set; }
     }
 }
