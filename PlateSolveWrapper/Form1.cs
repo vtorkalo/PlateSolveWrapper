@@ -20,7 +20,8 @@ namespace PlateSolveWrapper
         private System.Windows.Forms.Timer _timer;
         private Util _util = new Util();
         private readonly SynchronizationContext _synchronizationContext;
-        private bool _aborted = false;
+        private CancellationTokenSource tokenSource;
+
         public fmMain()
         {
             InitializeComponent();
@@ -34,33 +35,16 @@ namespace PlateSolveWrapper
             UnitSettingsUI();
 
             _plateSolver = new PlateSolver();
-            _plateSolver.PlateSolveFinished += _plateSolver_PlateSolveFinished;
+          
+            if (_settings.AutoConnect)
+            {
+                ConnectTelescope(_settings.LastTelescopeId);
+                ConnectCamera(_settings.LastCameraId);
+            }
+            UpdateUiState();
         }
 
-        private void _plateSolver_PlateSolveFinished(object sender, PlateSolveEventArgs e)
-        {
-            isProcessing = false;
-            if (e.Coordinate != null)
-            {
-                _telescope.SyncToCoordinates(e.Coordinate.Ra, e.Coordinate.Dec);
-                _synchronizationContext.Post(o =>
-                {
-                    tbSolvedCoordinates.Text = string.Format("{0}, Angle: {1:0.##}", GetCoordinatesStr(e.Coordinate.Ra, e.Coordinate.Dec), e.Coordinate.CameraAngle);
-                    lblSolvedFileName.Text = Path.GetFileName(e.FileName);
-                }, e);
-                Update("Solve successful");
-            }
-            else
-            {
-                _synchronizationContext.Post(o =>
-                {
-                    tbSolvedCoordinates.Text = string.Empty;
-                    lblSolvedFileName.Text = string.Empty;
-                    Update("Solve failed");
-                }, null);
-            }
-        }
-
+    
         private void _timer_Tick(object sender, EventArgs e)
         {
             if (IsScopeConnected())
@@ -81,62 +65,96 @@ namespace PlateSolveWrapper
             tbPlateSolverPath.Text = _settings.SolverPath;
             numSearchTiles.Value = _settings.SearchTiles;
             numExposure.Value = _settings.Exposure;
+            cbAutoConnect.Checked = _settings.AutoConnect;
         }
 
         private void ReadSettingsFromUi()
         {
             _settings.FieldWidth = (int)numFieldWidth.Value;
-            _settings.FieldHeight =(int) numFieldHeight.Value;
+            _settings.FieldHeight = (int)numFieldHeight.Value;
             _settings.SolverPath = tbPlateSolverPath.Text;
             _settings.SearchTiles = (int)numSearchTiles.Value;
             _settings.Exposure = (int)numExposure.Value;
+            _settings.AutoConnect = cbAutoConnect.Checked;
         }
 
         private void btnConnectMount_Click(object sender, EventArgs e)
         {
-            try
+            if (!IsScopeConnected())
             {
-                ConnectTelescope();                
+                if (!ConnectTelescope(_settings.LastTelescopeId))
+                {
+                    MessageBox.Show("Failed to connect telescope");                    
+                }
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show("Failed to connect telescope");
+                DisconnectTelescope();
             }
+
             UpdateUiState();
         }
 
-        private void SolveAndSync(string fileName)
-        {            
+        private void SolveAndSync(string fileName, CancellationToken token)
+        {
             _settings.LastImagePath = Path.GetFullPath(fileName);
 
-            _plateSolver.StartPlateSolve(fileName,
+            var coordinate = _plateSolver.StartPlateSolve(fileName,
                                                 _telescope.RightAscension,
                                                 _telescope.Declination,
                                                 _settings.FieldWidth,
                                                 _settings.FieldHeight,
                                                 _settings.SearchTiles,
-                                                _settings.SolverPath);
-           
+                                                _settings.SolverPath, token);
+
+            isProcessing = false;
+            if (coordinate != null)
+            {
+                _telescope.SyncToCoordinates(coordinate.Ra, coordinate.Dec);
+                _synchronizationContext.Post(o =>
+                {
+                    tbSolvedCoordinates.Text = string.Format("{0}, Angle: {1:0.##}", GetCoordinatesStr(coordinate.Ra, coordinate.Dec), coordinate.CameraAngle);
+                    lblSolvedFileName.Text = Path.GetFileName(fileName);
+                    Update("Solve successful");
+                }, null);
+            }
+            else
+            {
+                _synchronizationContext.Post(o =>
+                {
+                    tbSolvedCoordinates.Text = string.Empty;
+                    lblSolvedFileName.Text = string.Empty;
+                    Update("Solve failed");
+                }, null);
+            }
+
         }
 
         private void ClearResult()
         {
-            _synchronizationContext.Post(o => {
+            _synchronizationContext.Post(o =>
+            {
                 lblSolvedFileName.Text = string.Empty;
                 tbSolvedCoordinates.Text = "";
             }, null);
         }
 
-        public void ConnectTelescope()
+        public bool ConnectTelescope(string progID)
         {
-            string progID = Telescope.Choose(_settings.LastTelescopeId);
-            if (!string.IsNullOrEmpty(progID))
+            bool isConnected = false;
+            try
             {
                 _telescope = new Telescope(progID);
                 _telescope.Connected = true;
-                _telescope.Tracking = true;
                 _settings.LastTelescopeId = progID;
+                isConnected = true;
             }
+            catch (Exception)
+            {
+                _settings.LastTelescopeId = string.Empty;
+            }
+
+            return isConnected;
         }
 
         public void DisconnectTelescope()
@@ -167,9 +185,19 @@ namespace PlateSolveWrapper
             tbPlateSolverPath.Text = _settings.SolverPath;
         }
 
-        private void btnDisconnect_Click(object sender, EventArgs e)
+        private void btnSelectTelescope_Click(object sender, EventArgs e)
         {
-            DisconnectTelescope();
+            try
+            {
+                string progID = Telescope.Choose(_settings.LastTelescopeId);
+                _settings.LastTelescopeId = progID;
+                ConnectTelescope(progID);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
             UpdateUiState();
         }
 
@@ -204,18 +232,16 @@ namespace PlateSolveWrapper
         private void UpdateUiState(string progressMessage = "")
         {
             bool scopeConnected = IsScopeConnected();
-            btnConnectMount.Enabled = !scopeConnected;
-            btnDisconnect.Enabled = scopeConnected;
+            btnConnectMount.Text = scopeConnected ? "Disconnect" : "Connect";
+            btnSelectTelescope.Enabled = !scopeConnected;
             btnOpenSolveAndSync.Enabled = scopeConnected;
-            lblScopeName.Text = scopeConnected ? _telescope.Name : "Not connected";
-
+            btnConnectMount.Enabled = !string.IsNullOrEmpty(_settings.LastTelescopeId);
 
             bool cameraConnected = IsCameraConnected();
-            btnConnectCamera.Enabled = !cameraConnected;
-            btnDisconnectCamera.Enabled = cameraConnected;
-            lblCameraName.Text = cameraConnected ? _camera.Name : "Not connected";
+            btnSelectCamera.Enabled = !cameraConnected;
+            btnConnectCamera.Text = cameraConnected ? "Disconnect" : "Connect";
             btnShotSolveSync.Enabled = scopeConnected && cameraConnected && !isProcessing;
-
+            btnConnectCamera.Enabled = !string.IsNullOrEmpty(_settings.LastCameraId);
 
             bool isIdle = cameraConnected && _camera.CameraState == ASCOM.DeviceInterface.CameraStates.cameraIdle;
             btnShotSolveSync.Enabled = scopeConnected && isIdle && !isProcessing;
@@ -231,13 +257,16 @@ namespace PlateSolveWrapper
             gbScope.Enabled = !isProcessing;
             gbCamera.Enabled = !isProcessing;
             gbSettings.Enabled = !isProcessing;
+
+            lblScopeName.Text = _settings.LastTelescopeId;
+            lblCameraName.Text = _settings.LastCameraId;
         }
 
         private string GetCoordinatesStr(double ra, double dec)
         {
             var raAngle = _util.HoursToHMS(ra);
             var decAngle = _util.DegreesToDMS(dec);
-            string decSign = dec >= 0? "+" : "";
+            string decSign = dec >= 0 ? "+" : "";
             string result = string.Format("RA: {0}, DEC: {1}{2}", raAngle.ToString(), decSign, decAngle.ToString());
 
             return result;
@@ -245,32 +274,44 @@ namespace PlateSolveWrapper
 
         private void btnConnectCamera_Click(object sender, EventArgs e)
         {
-            try
+            if (!IsCameraConnected())
             {
-                ConnectCamera();                
+                if (!ConnectCamera(_settings.LastCameraId))
+                {                    
+                    MessageBox.Show("Failed to connect camera");
+                }
             }
-            catch(Exception ex)
+            else
             {
-                MessageBox.Show("Failed to connect camera");
+                DisconnectCamera();
             }
             UpdateUiState();
         }
 
-        private void btnDisconnectCamera_Click(object sender, EventArgs e)
-        {
-            DisconnectCamera();
-            UpdateUiState();
-        }
-
-        private void ConnectCamera()
+        private void btnSelectCamera_Click(object sender, EventArgs e)
         {
             string progID = Camera.Choose(_settings.LastCameraId);
-            if (!string.IsNullOrEmpty(progID))
+            _settings.LastCameraId = progID;
+            ConnectCamera(progID);
+            UpdateUiState();
+        }
+
+        private bool ConnectCamera(string progID)
+        {
+            bool isConnected = false;
+            try
             {
                 _camera = new Camera(progID);
                 _camera.Connected = true;
                 _settings.LastCameraId = progID;
+                isConnected = true;
             }
+            catch (Exception)
+            {
+                _settings.LastCameraId = string.Empty;
+            }
+
+            return isConnected;
         }
 
         private void DisconnectCamera()
@@ -283,7 +324,6 @@ namespace PlateSolveWrapper
         {
             try
             {
-                isProcessing = true;
                 ReadSettingsFromUi();
                 OpenFileDialog dialog = new OpenFileDialog();
                 dialog.Title = "Open Image";
@@ -292,25 +332,33 @@ namespace PlateSolveWrapper
 
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
+                    isProcessing = true;
                     ClearResult();
-                    SolveAndSync(dialog.FileName);
+                    tokenSource = new CancellationTokenSource();
+                    var token = tokenSource.Token;
+                    SolveAndSync(dialog.FileName, tokenSource.Token);
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 isProcessing = false;
-            }            
+            }
         }
 
         private async void btnShotSolveSync_Click(object sender, EventArgs e)
         {
-           await ShotSolveSync();
-        }    
+            tokenSource = new CancellationTokenSource();
+            var token = tokenSource.Token;
+            await ShotSolveSync(token);
+        }
 
-        private async Task ShotSolveSync()
+        private async Task ShotSolveSync(CancellationToken token)
         {
-            await Task.Run(()=>{
+            
+            await Task.Run(() =>
+            {
+              
                 try
                 {
                     ClearResult();
@@ -323,8 +371,8 @@ namespace PlateSolveWrapper
                     Update("Exposure...");
                     while (!_camera.ImageReady)
                     {
-                       _util.WaitForMilliseconds(300);
-                        CheckAbortState();
+                        _util.WaitForMilliseconds(300);
+                        token.ThrowIfCancellationRequested();
                     }
 
                     Update("Reading image...");
@@ -332,12 +380,10 @@ namespace PlateSolveWrapper
                     var bmp = ImageHelper.GetBitmap((Array)_camera.ImageArray, _camera.MaxADU);
                     ImageHelper.SaveBmp(bmp, fileName);
                     Update("Solving...");
-                    SolveAndSync(fileName);
-                    Update();
+                    SolveAndSync(fileName, token);                    
                 }
                 catch (OperationCanceledException)
                 {
-                    _aborted = false;
                     Update("Aborted");
                     if (_camera.CameraState == ASCOM.DeviceInterface.CameraStates.cameraExposing)
                     {
@@ -347,13 +393,15 @@ namespace PlateSolveWrapper
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     isProcessing = false;
+                    Update();
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-            });
+                return;
+            }, token);
         }
 
-        private void Update(string status = "")
+        private void Update(string status = " ")
         {
             _synchronizationContext.Post(c =>
             {
@@ -374,18 +422,12 @@ namespace PlateSolveWrapper
             }
         }
 
-        private void CheckAbortState()
-        {
-            if (_aborted)
-            {
-                throw new OperationCanceledException();
-            }
-        }
+     
         private bool isProcessing;
 
         private void btnAbort_Click(object sender, EventArgs e)
         {
-            _aborted = true;
+            tokenSource.Cancel();
         }
     }
 }

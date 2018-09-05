@@ -2,47 +2,53 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace PlateSolveWrapper
 {
     public class PlateSolver
     {
         private string _fileName;
-        public void StartPlateSolve(string fileName, double ra, double dec, double fieldWidth, double fieldHeight, int maxTiles, string solverPath)
+        public Coordinate StartPlateSolve(string fileName, double ra, double dec, double fieldWidth, double fieldHeight, int maxTiles, string solverPath, CancellationToken cancellationToken)
         {
-            try
-            {
-                var proc = new System.Diagnostics.Process();
+            Coordinate coordinate = null;
 
-                proc.StartInfo.FileName = solverPath;
-                proc.StartInfo.Arguments =
-                    MathHelpers.HoursToRad(ra).ToString("0.00000", CultureInfo.InvariantCulture) + "," +           // ra, радиан
-                    MathHelpers.DegToRad(dec).ToString("0.00000", CultureInfo.InvariantCulture) + "," + // dec, радиан
-                    MathHelpers.DegToRad(fieldWidth / 60d).ToString("0.000", CultureInfo.InvariantCulture) + "," +                      // ширина поля, радиан
-                    MathHelpers.DegToRad(fieldHeight / 60d).ToString("0.000", CultureInfo.InvariantCulture) + "," +                     // высота поля, радиан
-                    maxTiles.ToString() + "," +                                                                                      // кол-во элемнетов спирали
-                    fileName + "," +                                                                                // имя фита
-                    "0";
-                proc.EnableRaisingEvents = true;
-                proc.Exited += Proc_Exited;
-                _fileName = fileName;
-                proc.Start();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Failed to start plate solver. Please check solver location.", ex);
-            }
-        }
+            var proc = new System.Diagnostics.Process();
 
-        private void Proc_Exited(object sender, EventArgs e)
-        {
+            proc.StartInfo.FileName = solverPath;
+            proc.StartInfo.Arguments =
+                MathHelpers.HoursToRad(ra).ToString("0.00000", CultureInfo.InvariantCulture) + "," +           // ra, радиан
+                MathHelpers.DegToRad(dec).ToString("0.00000", CultureInfo.InvariantCulture) + "," + // dec, радиан
+                MathHelpers.DegToRad(fieldWidth / 60d).ToString("0.000", CultureInfo.InvariantCulture) + "," +                      // ширина поля, радиан
+                MathHelpers.DegToRad(fieldHeight / 60d).ToString("0.000", CultureInfo.InvariantCulture) + "," +                     // высота поля, радиан
+                maxTiles.ToString() + "," +                                                                                      // кол-во элемнетов спирали
+                fileName + "," +                                                                                // имя фита
+                "0";
+            _fileName = fileName;
+            proc.Start();
+            
+            while (!proc.HasExited)
+            {
+                Thread.Sleep(1000);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    proc.Kill();
+                }
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
             string apmFileName = Path.Combine(
-                    Path.GetDirectoryName(_fileName),
-                    Path.ChangeExtension(Path.GetFileNameWithoutExtension(_fileName), "apm")
-                );
-             var coordinates = ReadApmFile(apmFileName);
-            RaisePlateSolveFinished(coordinates, _fileName);
+             Path.GetDirectoryName(_fileName),
+             Path.ChangeExtension(Path.GetFileNameWithoutExtension(_fileName), "apm")
+                                             );
+            coordinate = ReadApmFile(apmFileName);
+
+
+
+            return coordinate;
         }
+
+
 
         private Coordinate ReadApmFile(string fileName)
         {
@@ -72,16 +78,7 @@ namespace PlateSolveWrapper
             return result;
         }
 
-        public delegate void PlateSolveEventHandler(object sender, PlateSolveEventArgs e);
 
-        public event PlateSolveEventHandler PlateSolveFinished;
-        
-        protected virtual void RaisePlateSolveFinished(Coordinate coordinate, string fileName)
-        {
-            // Raise the event by using the () operator.
-            if (PlateSolveFinished != null)
-                PlateSolveFinished(this, new PlateSolveEventArgs(coordinate, fileName));
-        }
 
         private string HandleSeparators(string input)
         {
@@ -116,14 +113,5 @@ namespace PlateSolveWrapper
         }
     }
 
-    public class PlateSolveEventArgs
-    {
-        public PlateSolveEventArgs(Coordinate c, string fileName)
-        {
-            Coordinate = c;
-            FileName = fileName;
-        }
-        public Coordinate Coordinate { get; private set; }
-        public string FileName { get; private set; }
-    }
+
 }

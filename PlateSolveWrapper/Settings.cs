@@ -21,5 +21,6 @@ namespace PlateSolveWrapper
         public string LastTelescopeId { get; set; }
         public string LastCameraId { get; set; }
         public int Exposure { get; set; }
+        public bool AutoConnect { get; set; }
     }
 }

@@ -43,7 +43,7 @@
             this.gbScope = new System.Windows.Forms.GroupBox();
             this.tbCurrentCoordinates = new System.Windows.Forms.TextBox();
             this.lblCurrentCoordinates = new System.Windows.Forms.Label();
-            this.btnDisconnect = new System.Windows.Forms.Button();
+            this.btnSelectTelescope = new System.Windows.Forms.Button();
             this.gbSolveResult = new System.Windows.Forms.GroupBox();
             this.lblStatus = new System.Windows.Forms.Label();
             this.lblSolvedFileName = new System.Windows.Forms.Label();
@@ -51,11 +51,12 @@
             this.gbCamera = new System.Windows.Forms.GroupBox();
             this.numExposure = new System.Windows.Forms.NumericUpDown();
             this.lblExposure = new System.Windows.Forms.Label();
-            this.btnDisconnectCamera = new System.Windows.Forms.Button();
+            this.btnSelectCamera = new System.Windows.Forms.Button();
             this.lblCameraName = new System.Windows.Forms.Label();
             this.btnConnectCamera = new System.Windows.Forms.Button();
             this.btnShotSolveSync = new System.Windows.Forms.Button();
             this.btnAbort = new System.Windows.Forms.Button();
+            this.cbAutoConnect = new System.Windows.Forms.CheckBox();
             this.gbSettings.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numSearchTiles)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numFieldHeight)).BeginInit();
@@ -71,7 +72,7 @@
             this.btnConnectMount.Location = new System.Drawing.Point(14, 49);
             this.btnConnectMount.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnConnectMount.Name = "btnConnectMount";
-            this.btnConnectMount.Size = new System.Drawing.Size(88, 35);
+            this.btnConnectMount.Size = new System.Drawing.Size(113, 35);
             this.btnConnectMount.TabIndex = 0;
             this.btnConnectMount.Text = "Connect mount";
             this.btnConnectMount.UseVisualStyleBackColor = true;
@@ -91,6 +92,7 @@
             // 
             // gbSettings
             // 
+            this.gbSettings.Controls.Add(this.cbAutoConnect);
             this.gbSettings.Controls.Add(this.numSearchTiles);
             this.gbSettings.Controls.Add(this.label1);
             this.gbSettings.Controls.Add(this.btnBrowseSolver);
@@ -241,7 +243,7 @@
             // 
             this.gbScope.Controls.Add(this.tbCurrentCoordinates);
             this.gbScope.Controls.Add(this.lblCurrentCoordinates);
-            this.gbScope.Controls.Add(this.btnDisconnect);
+            this.gbScope.Controls.Add(this.btnSelectTelescope);
             this.gbScope.Controls.Add(this.lblScopeName);
             this.gbScope.Controls.Add(this.btnConnectMount);
             this.gbScope.Location = new System.Drawing.Point(18, 192);
@@ -270,17 +272,16 @@
             this.lblCurrentCoordinates.TabIndex = 6;
             this.lblCurrentCoordinates.Text = "Current coordinates";
             // 
-            // btnDisconnect
+            // btnSelectTelescope
             // 
-            this.btnDisconnect.Enabled = false;
-            this.btnDisconnect.Location = new System.Drawing.Point(111, 49);
-            this.btnDisconnect.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.btnDisconnect.Name = "btnDisconnect";
-            this.btnDisconnect.Size = new System.Drawing.Size(112, 35);
-            this.btnDisconnect.TabIndex = 5;
-            this.btnDisconnect.Text = "Disconnect";
-            this.btnDisconnect.UseVisualStyleBackColor = true;
-            this.btnDisconnect.Click += new System.EventHandler(this.btnDisconnect_Click);
+            this.btnSelectTelescope.Location = new System.Drawing.Point(135, 49);
+            this.btnSelectTelescope.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnSelectTelescope.Name = "btnSelectTelescope";
+            this.btnSelectTelescope.Size = new System.Drawing.Size(112, 35);
+            this.btnSelectTelescope.TabIndex = 5;
+            this.btnSelectTelescope.Text = "Select";
+            this.btnSelectTelescope.UseVisualStyleBackColor = true;
+            this.btnSelectTelescope.Click += new System.EventHandler(this.btnSelectTelescope_Click);
             // 
             // gbSolveResult
             // 
@@ -325,7 +326,7 @@
             // 
             this.gbCamera.Controls.Add(this.numExposure);
             this.gbCamera.Controls.Add(this.lblExposure);
-            this.gbCamera.Controls.Add(this.btnDisconnectCamera);
+            this.gbCamera.Controls.Add(this.btnSelectCamera);
             this.gbCamera.Controls.Add(this.lblCameraName);
             this.gbCamera.Controls.Add(this.btnConnectCamera);
             this.gbCamera.Location = new System.Drawing.Point(18, 406);
@@ -370,17 +371,17 @@
             this.lblExposure.TabIndex = 9;
             this.lblExposure.Text = "Exposure (s)";
             // 
-            // btnDisconnectCamera
+            // btnSelectCamera
             // 
-            this.btnDisconnectCamera.Enabled = false;
-            this.btnDisconnectCamera.Location = new System.Drawing.Point(111, 49);
-            this.btnDisconnectCamera.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.btnDisconnectCamera.Name = "btnDisconnectCamera";
-            this.btnDisconnectCamera.Size = new System.Drawing.Size(112, 35);
-            this.btnDisconnectCamera.TabIndex = 8;
-            this.btnDisconnectCamera.Text = "Disconnect";
-            this.btnDisconnectCamera.UseVisualStyleBackColor = true;
-            this.btnDisconnectCamera.Click += new System.EventHandler(this.btnDisconnectCamera_Click);
+            this.btnSelectCamera.Enabled = false;
+            this.btnSelectCamera.Location = new System.Drawing.Point(135, 49);
+            this.btnSelectCamera.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnSelectCamera.Name = "btnSelectCamera";
+            this.btnSelectCamera.Size = new System.Drawing.Size(112, 35);
+            this.btnSelectCamera.TabIndex = 8;
+            this.btnSelectCamera.Text = "Select";
+            this.btnSelectCamera.UseVisualStyleBackColor = true;
+            this.btnSelectCamera.Click += new System.EventHandler(this.btnSelectCamera_Click);
             // 
             // lblCameraName
             // 
@@ -397,7 +398,7 @@
             this.btnConnectCamera.Location = new System.Drawing.Point(14, 49);
             this.btnConnectCamera.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnConnectCamera.Name = "btnConnectCamera";
-            this.btnConnectCamera.Size = new System.Drawing.Size(88, 35);
+            this.btnConnectCamera.Size = new System.Drawing.Size(113, 35);
             this.btnConnectCamera.TabIndex = 6;
             this.btnConnectCamera.Text = "Connect mount";
             this.btnConnectCamera.UseVisualStyleBackColor = true;
@@ -426,6 +427,16 @@
             this.btnAbort.Text = "Abort";
             this.btnAbort.UseVisualStyleBackColor = true;
             this.btnAbort.Click += new System.EventHandler(this.btnAbort_Click);
+            // 
+            // cbAutoConnect
+            // 
+            this.cbAutoConnect.AutoSize = true;
+            this.cbAutoConnect.Location = new System.Drawing.Point(259, 111);
+            this.cbAutoConnect.Name = "cbAutoConnect";
+            this.cbAutoConnect.Size = new System.Drawing.Size(130, 24);
+            this.cbAutoConnect.TabIndex = 8;
+            this.cbAutoConnect.Text = "Auto connect";
+            this.cbAutoConnect.UseVisualStyleBackColor = true;
             // 
             // fmMain
             // 
@@ -477,14 +488,14 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label lblScopeName;
         private System.Windows.Forms.GroupBox gbScope;
-        private System.Windows.Forms.Button btnDisconnect;
+        private System.Windows.Forms.Button btnSelectTelescope;
         private System.Windows.Forms.TextBox tbCurrentCoordinates;
         private System.Windows.Forms.Label lblCurrentCoordinates;
         private System.Windows.Forms.GroupBox gbSolveResult;
         private System.Windows.Forms.TextBox tbSolvedCoordinates;
         private System.Windows.Forms.Label lblSolvedFileName;
         private System.Windows.Forms.GroupBox gbCamera;
-        private System.Windows.Forms.Button btnDisconnectCamera;
+        private System.Windows.Forms.Button btnSelectCamera;
         private System.Windows.Forms.Label lblCameraName;
         private System.Windows.Forms.Button btnConnectCamera;
         private System.Windows.Forms.NumericUpDown numExposure;
@@ -492,6 +503,7 @@
         private System.Windows.Forms.Button btnShotSolveSync;
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.Button btnAbort;
+        private System.Windows.Forms.CheckBox cbAutoConnect;
     }
 }
 
