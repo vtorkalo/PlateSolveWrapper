@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -14,26 +10,29 @@ namespace PlateSolveWrapper
 {
     public static class ImageHelper
     {
-
-
         public static Bitmap GetMonochromeBitmap(int[,] data, int maxAdu)
         {
             int IMAGE_WIDTH = data.GetLength(0);
             int IMAGE_HEIGHT = data.GetLength(1);
-            var b16bpp = new Bitmap(IMAGE_WIDTH, IMAGE_HEIGHT, System.Drawing.Imaging.PixelFormat.Format8bppIndexed);
+            var b16bpp = new Bitmap(IMAGE_WIDTH, IMAGE_HEIGHT, System.Drawing.Imaging.PixelFormat.Format16bppGrayScale);
 
             var rect = new Rectangle(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
             var bitmapData = b16bpp.LockBits(rect, ImageLockMode.WriteOnly, b16bpp.PixelFormat);
             var numberOfBytes = bitmapData.Stride * IMAGE_HEIGHT;
-            var bitmapBytes = new byte[IMAGE_WIDTH * IMAGE_HEIGHT];
-            var random = new Random();
+            var bitmapBytes = new byte[IMAGE_WIDTH * IMAGE_HEIGHT*2];
 
-            for (int x = 0; x < IMAGE_WIDTH; x++)
+            for (int y = 0; y < IMAGE_HEIGHT; y++)
             {
-                for (int y = 0; y < IMAGE_HEIGHT; y++)
+                for (int x = 0; x < IMAGE_WIDTH; x++)
                 {
-                    var i = ((y * IMAGE_WIDTH) + x);
-                    bitmapBytes[i] = ScaleToByte(data[x, y], maxAdu);
+                    var i = y * IMAGE_WIDTH*2 + x * 2;
+                    var l = ScaleToUshort(data[x, y], maxAdu);
+                    ushort[] source = new ushort[] { l };
+                    byte[] target = new byte[source.Length * sizeof(ushort)];
+                    Buffer.BlockCopy(source, 0, target, 0, source.Length * sizeof(ushort));
+
+                    bitmapBytes[i] = target[0];
+                    bitmapBytes[i +1] = target[1];
                 }
             }
 
@@ -44,34 +43,31 @@ namespace PlateSolveWrapper
             return b16bpp;
         }
 
-
         public static Bitmap GetColorBitmap(int[,,] data, int maxAdu)
         {
             int IMAGE_WIDTH = data.GetLength(0);
             int IMAGE_HEIGHT = data.GetLength(1);
-            var bitmapColor = new Bitmap(IMAGE_WIDTH, IMAGE_HEIGHT, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+            var bitmapColor = new Bitmap(IMAGE_WIDTH, IMAGE_HEIGHT, System.Drawing.Imaging.PixelFormat.Format64bppArgb);
 
             var rect = new Rectangle(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
             var bitmapData = bitmapColor.LockBits(rect, ImageLockMode.ReadOnly, bitmapColor.PixelFormat);
             var numberOfBytes = bitmapData.Stride * IMAGE_HEIGHT;
-            var bitmapBytes = new int[IMAGE_WIDTH * IMAGE_HEIGHT];
-
-            for (int x = 0; x < IMAGE_WIDTH; x++)
+            var bitmapBytes = new long[IMAGE_WIDTH * IMAGE_HEIGHT];
+            for (int y = 0; y < IMAGE_HEIGHT; y++)
             {
-                for (int y = 0; y < IMAGE_HEIGHT; y++)
+                for (int x = 0; x < IMAGE_WIDTH; x++)
                 {
                     var i = y * IMAGE_WIDTH + x;
 
                     byte a = 0;
-                    byte b = ScaleToByte(data[x, y, 0], maxAdu);
-                    byte g = ScaleToByte(data[x, y, 1], maxAdu);
-                    byte r = ScaleToByte(data[x, y, 2], maxAdu);
+                    ushort b = ScaleToUshort(data[x, y, 0], maxAdu);
+                    ushort g = ScaleToUshort(data[x, y, 1], maxAdu);
+                    ushort r = ScaleToUshort(data[x, y, 2], maxAdu);
 
-                    byte[] source = new byte[] { b, g, r, a };
-                    byte[] target = new byte[source.Length * sizeof(byte)];
-                    Buffer.BlockCopy(source, 0, target, 0, source.Length * sizeof(byte));
-
-                    bitmapBytes[i] = BitConverter.ToInt32(target, 0);
+                    ushort[] source = new ushort[] {r, g, b, a};
+                    byte[] target = new byte[source.Length * sizeof(ushort)];
+                    Buffer.BlockCopy(source, 0, target, 0, source.Length * sizeof(ushort));
+                    bitmapBytes[i] = BitConverter.ToInt64(target, 0);
                 }
             }
 
@@ -98,16 +94,11 @@ namespace PlateSolveWrapper
             }
         }
 
-        private static byte ScaleToByte(int value, int maxValue)
+        private static ushort ScaleToUshort(int value, int maxValue)
         {
-            if (maxValue <= byte.MaxValue)
-            {
-                return (byte)value;
-            }
+            double scale = (double)ushort.MaxValue / (double)maxValue;
 
-            double scale = (double)value / (double)maxValue;
-
-            byte result = (byte)(byte.MaxValue * scale);
+            ushort result = (ushort)(value * scale);
 
             return result;
         }
@@ -137,7 +128,6 @@ namespace PlateSolveWrapper
 
             JpegBitmapEncoder encoder = new JpegBitmapEncoder();
 
-           // encoder.Compression = TiffCompressOption.Zip;
             encoder.Frames.Add(BitmapFrame.Create(source));
             encoder.Save(stream);
 
