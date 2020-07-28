@@ -369,15 +369,15 @@ namespace PlateSolveWrapper
                         "temp.jpg");
                     _camera.StartExposure(_settings.Exposure, true);
                     Update("Exposure...");
-                    while (!_camera.ImageReady)
+                    while (!_camera.ImageReady || _camera.CameraState != ASCOM.DeviceInterface.CameraStates.cameraIdle)
                     {
                         _util.WaitForMilliseconds(300);
                         token.ThrowIfCancellationRequested();
-                    }
-
+                    }                    
                     Update("Reading image...");
+
                     var array = (Array)_camera.ImageArray;
-                    var bmp = ImageHelper.GetBitmap((Array)_camera.ImageArray, _camera.MaxADU);
+                    var bmp = ImageHelper.GetBitmap(array, _camera.MaxADU);
                     ImageHelper.SaveBmp(bmp, fileName);
                     Update("Solving...");
                     SolveAndSync(fileName, token);                    
